@@ -1,0 +1,20 @@
+{
+  "root": true,
+  "extends": [
+    "airbnb-base",
+    "fdio"
+  ],
+  "env": {
+    "es6": true
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "directory": "./tsconfig.json"
+      }
+    }
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": 0
+  }
+}

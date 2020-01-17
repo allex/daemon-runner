@@ -1,0 +1,65 @@
+{
+  "name": "daemon-runner",
+  "version": "1.0.1",
+  "description": "Task runner Based on interval",
+  "jsnext:main": "lib/runner.esm.js",
+  "module": "lib/runner.esm.js",
+  "main": "lib/runner.js",
+  "types": "lib/index.d.ts",
+  "repository": "allex/daemon-runner",
+  "keywords": [
+    "interval",
+    "runner"
+  ],
+  "scripts": {
+    "precommit": "yarn lint && yarn test",
+    "lint": "eslint src/* --fix",
+    "test": "jest --coverage --passWithNoTests",
+    "build": "yarn lint && rb -c && cp -rf types lib/",
+    "prepare": "yarn build"
+  },
+  "author": "Allex Wang <allex.wxn@gmail.com>",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
+    "babel-core": "bridge",
+    "babel-jest": "^23.6.0",
+    "eslint": "^5.15.3",
+    "eslint-config-airbnb-base": "~14.0.0",
+    "eslint-config-fdio": "~1.1.0",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-vue": "^6.1.2",
+    "husky": "^1.1.2",
+    "jest": "^23.6.0",
+    "ts-mockito": "^2.3.0",
+    "ts-node": "^7.0.0"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "modulePaths": [
+      "src"
+    ],
+    "testMatch": [
+      "**/?(*-)+(spec|test).?(m)js"
+    ],
+    "roots": [
+      "test"
+    ],
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "transform": {
+      "\\.js$": "babel-jest"
+    }
+  }
+}
