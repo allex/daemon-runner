@@ -24,6 +24,7 @@
     "@babel/core": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
     "@babel/runtime": "^7.6.2",
+    "@types/node": "^13.1.8",
     "babel-core": "bridge",
     "babel-jest": "^23.6.0",
     "eslint": "^5.15.3",
@@ -43,6 +44,7 @@
   ],
   "jest": {
     "testEnvironment": "node",
+    "coverageReporters": ["json", "lcovonly", "text", "clover"],
     "modulePaths": [
       "src"
     ],
