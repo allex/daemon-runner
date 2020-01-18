@@ -1,3 +1,5 @@
+import { now } from './now'
+
 export interface RunnerItem {
   fn: (...args: any[]) => any;
   ctx?: any;
@@ -6,7 +8,7 @@ export interface RunnerItem {
   ts?: number;
 }
 
-enum RunnerState {
+export enum RunnerState {
   STOP, STOPED, RUNNING
 }
 
@@ -20,9 +22,15 @@ export class TaskRunner {
   }
 
   private _items: RunnerItem[] = [];
-  private _tm: number | null = null;
+  private _tm: any = null;
   private _state: RunnerState = RunnerState.STOP;
 
+  /**
+   * Enqueue task to the runner queue, bootstrap runner if not stoped manually
+   *
+   * @param task {Function} Add task function
+   * @param options {Number|RunnerCallbackOptions} task options, as interval if a number
+   */
   add (fn: (...args: any[]) => any, options: number | RunnerCallbackOptions): TaskRunner {
     let conf: RunnerCallbackOptions
     if (typeof options === 'number') {
@@ -37,8 +45,17 @@ export class TaskRunner {
     if (!items.some(o => o.fn === fn && o.interval === conf.interval)) {
       items.push({ fn, args: [], ...conf })
     }
-
+    if (this._state === RunnerState.STOP) {
+      this.start()
+    }
     return this
+  }
+
+  /**
+   * Returns the runner queue task size
+   */
+  size (): number {
+    return this._items.length
   }
 
   clear (): TaskRunner {
@@ -58,7 +75,7 @@ export class TaskRunner {
 
     const process = (): void => {
       this._state = RunnerState.RUNNING
-      const clock = Date.now()
+      const clock = now()
       const arr = this._items.slice(0)
       let conf: RunnerItem | null
       let index = -1
@@ -71,22 +88,24 @@ export class TaskRunner {
             this._items.splice(index, 1)
           }
           fn.apply(ctx, args || [])
-          conf.ts = Date.now()
+          conf.ts = now()
         }
       }
     }
 
     const next = (): void => {
       process()
-      if (this._state !== RunnerState.STOPED && this._items.length) {
-        this._tm = setTimeout(next, 50)
+      if (this._state === RunnerState.STOPED) {
+        return
+      }
+      if (this._items.length) {
+        this._tm = setTimeout(next, 0)
       } else {
         this._state = RunnerState.STOP
       }
     }
 
     next()
-
     return this
   }
 
