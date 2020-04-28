@@ -6,7 +6,7 @@ module.exports = {
       "targets": {
         "browsers": [ "last 2 versions", "not ie <= 8" ]
       },
-      "exclude": [ "transform-typeof-symbol", "transform-function-name", "transform-classes" ]
+      "exclude": [ "transform-typeof-symbol", "transform-function-name" ]
     } ]
   ],
   "plugins": []
