@@ -1,7 +1,8 @@
 import assert from 'assert'
 import { TaskRunner, RunnerState } from '../'
 
-describe('debounce', function () {
+describe('daemon-runner', function () {
+
   it('should invoke task func with custom scope', (done) => {
     const runner = new TaskRunner()
     const interval = 64
@@ -67,8 +68,6 @@ describe('debounce', function () {
     const N = 5
     let callCount = 0
 
-    const ctx = {}
-
     setTimeout(function () {
       assert.strictEqual(callCount, N)
       runner.destroy()
@@ -79,7 +78,32 @@ describe('debounce', function () {
 
     runner.add(() => {
       callCount++
-    }, { interval, ctx })
+    }, { interval })
+  })
+
+  it('should await for last cycle when task is a promise returned', (done) => {
+    const runner = new TaskRunner()
+    const interval = 64
+    const N = 3
+    let callCount = 0
+    let resolveCount = 0
+
+    setTimeout(function () {
+      runner.destroy()
+      done()
+    }, interval * 2 * N)
+
+    runner.add(() => {
+      return new Promise((resolve, reject) => {
+        callCount++
+        // resolve delay
+        setTimeout(() => {
+          resolveCount++
+          assert.strictEqual(callCount, resolveCount)
+          resolve(callCount)
+        }, interval)
+      })
+    }, { interval })
   })
 
 })
