@@ -1,6 +1,6 @@
 {
   "name": "daemon-runner",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Task runner Based on interval",
   "jsnext:main": "lib/runner.esm.js",
   "module": "lib/runner.esm.js",
