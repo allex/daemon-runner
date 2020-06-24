@@ -4,7 +4,7 @@ import { TaskRunner, RunnerState } from '../'
 describe('daemon-runner', function () {
 
   it('should invoke task func with custom scope', (done) => {
-    const runner = new TaskRunner()
+    const runner = new TaskRunner().start()
     const interval = 64
     var callCount = 0
 
@@ -23,7 +23,7 @@ describe('daemon-runner', function () {
   })
 
   it('should invoke tasks with the specific interval delay', (done) => {
-    const runner = new TaskRunner()
+    const runner = new TaskRunner().start()
     const interval = 64
     var callCount = 0
 
@@ -39,7 +39,7 @@ describe('daemon-runner', function () {
   })
 
   it('should invoke the tasks only once if none interval provided', (done) => {
-    const runner = new TaskRunner()
+    const runner = new TaskRunner().start()
     var callCounts = {
         a: 0,
         b: 0
@@ -56,14 +56,14 @@ describe('daemon-runner', function () {
     setTimeout(function () {
       assert.strictEqual(callCounts['a'], 1)
       assert.strictEqual(callCounts['b'], 1)
-      assert.strictEqual(runner._state, RunnerState.STOP)
+      assert.strictEqual(runner._state, RunnerState.IDLE, 'runner is idle')
       assert.deepStrictEqual(runner.size(), 0)
       done()
     }, 64)
   })
 
   it('should stoped and cleaned if destroy invoked', (done) => {
-    const runner = new TaskRunner()
+    const runner = new TaskRunner().start()
     const interval = 64
     const N = 5
     let callCount = 0
@@ -104,6 +104,38 @@ describe('daemon-runner', function () {
         }, interval)
       })
     }, { interval })
+  })
+
+  it('should been wake up when idle runner was enqueue', (done) => {
+    const runner = new TaskRunner().start()
+    var callCounts = {
+        a: 0,
+        b: 0
+      },
+      object = {}
+
+    const task = () => {
+      callCounts['a']++
+    }
+
+    runner.add(task)
+
+    setTimeout(() => {
+      assert.strictEqual(callCounts['a'], 1)
+      assert.strictEqual(runner._state, RunnerState.IDLE, 'runner is idle')
+      assert.deepStrictEqual(runner.size(), 0)
+
+      // enqueue a interval task when runner idle
+      runner.add(task, 64)
+
+      // stop runner when task exec 4 times
+      const n = 4
+      setTimeout(() => {
+        runner.destroy()
+        assert.strictEqual(callCounts['a'], 1 + n)
+        done()
+      }, 64 * n)
+    }, 64)
   })
 
 })
