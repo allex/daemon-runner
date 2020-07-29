@@ -1,6 +1,7 @@
 import { now } from './now'
 
 const isPromise = (o: any): boolean => !!o && typeof o.then === 'function'
+const noop = (): void => void(0)
 
 interface TaskEntity {
   fn: (...args: any[]) => any;
@@ -15,8 +16,8 @@ interface TaskEntity {
 type TaskRunnerOnInit = (o: TaskRunner) => void
 
 type TaskRunnerOption = {
-  onInit?: TaskRunnerOnInit;
-  startOnAdd?: boolean;
+  onInit: TaskRunnerOnInit;
+  startOnAdd: boolean;
 }
 
 export enum RunnerState {
@@ -28,19 +29,17 @@ export type RunnerCallbackOptions = Partial<Omit<TaskEntity, 'fn'>>
 export class TaskRunner {
   constructor (opts: TaskRunnerOption | TaskRunnerOnInit) {
     if (opts) {
-      let onInit: TaskRunnerOnInit | undefined
       if (typeof opts === 'object') {
-        onInit = opts.onInit
-      } else if (typeof opts === 'function') {
-        onInit = opts
-      } else {
         Object.assign(this._opts, opts)
+      } else if (typeof opts === 'function') {
+        this._opts.onInit = opts
       }
-      onInit && onInit(this)
+      this._opts.onInit(this)
     }
   }
 
   private _opts: TaskRunnerOption = {
+    onInit: noop,
     startOnAdd: false
   };
 
@@ -122,7 +121,9 @@ export class TaskRunner {
         interval = 0,
         ts = 0
       } = task
-      const deltaTs = now() - (ts || 0)
+
+      const clock = now()
+      const deltaTs = clock - (ts || 0)
 
       if (deltaTs >= interval) {
         const tasks = this._tasks
@@ -158,7 +159,7 @@ export class TaskRunner {
               if (task.next) task.next()
             }, ~~(interval / 2)))
         }
-        task.ts = now()
+        task.ts = clock
       }
     }
 
@@ -171,10 +172,10 @@ export class TaskRunner {
     }
 
     const next = (): void => {
-      process()
       if (isStoped()) {
         return
       }
+      process()
       if (this._tasks.length) {
         this._tm = setTimeout(next, 1)
       } else {
@@ -196,5 +197,7 @@ export class TaskRunner {
   destroy (): void {
     this.stop()
     this._tasks.length = 0
+    // reset state to initial
+    this._state = RunnerState.READY
   }
 }

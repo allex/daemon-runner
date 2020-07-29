@@ -62,7 +62,7 @@ describe('daemon-runner', function () {
     }, 64)
   })
 
-  it('should stoped and cleaned if destroy invoked', (done) => {
+  it('should reset to initial state (READY) when instance destroyed', (done) => {
     const runner = new TaskRunner().start()
     const interval = 64
     const N = 5
@@ -71,7 +71,7 @@ describe('daemon-runner', function () {
     setTimeout(function () {
       assert.strictEqual(callCount, N)
       runner.destroy()
-      assert.strictEqual(runner._state, RunnerState.STOPED)
+      assert.strictEqual(runner._state, RunnerState.READY)
       assert.strictEqual(runner.size(), 0)
       done()
     }, interval * N)
