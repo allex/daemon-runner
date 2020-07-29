@@ -15,7 +15,7 @@ interface TaskEntity {
 
 type TaskRunnerOnInit = (o: TaskRunner) => void
 
-type TaskRunnerOption = {
+type TaskRunnerOptions = {
   onInit: TaskRunnerOnInit;
   startOnAdd: boolean;
 }
@@ -27,7 +27,7 @@ export enum RunnerState {
 export type RunnerCallbackOptions = Partial<Omit<TaskEntity, 'fn'>>
 
 export class TaskRunner {
-  constructor (opts: TaskRunnerOption | TaskRunnerOnInit) {
+  constructor (opts: Partial<TaskRunnerOptions> | TaskRunnerOnInit) {
     if (opts) {
       if (typeof opts === 'object') {
         Object.assign(this._opts, opts)
@@ -38,7 +38,7 @@ export class TaskRunner {
     }
   }
 
-  private _opts: TaskRunnerOption = {
+  private _opts: TaskRunnerOptions = {
     onInit: noop,
     startOnAdd: false
   };
