@@ -1,6 +1,6 @@
 {
   "name": "daemon-runner",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Task runner Based on interval",
   "jsnext:main": "lib/runner.esm.js",
   "module": "lib/runner.esm.js",
@@ -44,7 +44,12 @@
   ],
   "jest": {
     "testEnvironment": "node",
-    "coverageReporters": ["json", "lcovonly", "text", "clover"],
+    "coverageReporters": [
+      "json",
+      "lcovonly",
+      "text",
+      "clover"
+    ],
     "modulePaths": [
       "src"
     ],
