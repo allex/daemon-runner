@@ -3,8 +3,25 @@ import { TaskRunner, RunnerState } from '../'
 
 describe('daemon-runner', function () {
 
+  it('runner constructor parameter can be a initial function or mixed options obj', (done) => {
+    const startOnAdd = true
+    const onInit = () => 1
+    const runner = new TaskRunner({
+      onInit,
+      startOnAdd
+    })
+    assert.strictEqual(runner._opts.onInit, onInit)
+    assert.strictEqual(runner._opts.startOnAdd, startOnAdd)
+
+    const runner2 = new TaskRunner(onInit)
+    assert.strictEqual(runner2._opts.onInit, onInit)
+    assert.strictEqual(runner2._opts.startOnAdd, false)
+
+    done()
+  })
+
   it('should invoke task func with custom scope', (done) => {
-    const runner = new TaskRunner().start()
+    const runner = new TaskRunner({ startOnAdd: true })
     const interval = 64
     var callCount = 0
 
@@ -23,7 +40,7 @@ describe('daemon-runner', function () {
   })
 
   it('should invoke tasks with the specific interval delay', (done) => {
-    const runner = new TaskRunner().start()
+    const runner = new TaskRunner({ startOnAdd: true })
     const interval = 64
     var callCount = 0
 
@@ -39,7 +56,7 @@ describe('daemon-runner', function () {
   })
 
   it('should invoke the tasks only once if none interval provided', (done) => {
-    const runner = new TaskRunner().start()
+    const runner = new TaskRunner({ startOnAdd: true })
     var callCounts = {
         a: 0,
         b: 0
@@ -63,7 +80,7 @@ describe('daemon-runner', function () {
   })
 
   it('should reset to initial state (READY) when instance destroyed', (done) => {
-    const runner = new TaskRunner().start()
+    const runner = new TaskRunner({ startOnAdd: true })
     const interval = 64
     const N = 5
     let callCount = 0
@@ -82,7 +99,7 @@ describe('daemon-runner', function () {
   })
 
   it('should await for last cycle when task is a promise returned', (done) => {
-    const runner = new TaskRunner()
+    const runner = new TaskRunner({ startOnAdd: true })
     const interval = 64
     const N = 3
     let callCount = 0
@@ -107,7 +124,7 @@ describe('daemon-runner', function () {
   })
 
   it('should been wake up when idle runner was enqueue', (done) => {
-    const runner = new TaskRunner().start()
+    const runner = new TaskRunner({ startOnAdd: true })
     var callCounts = {
         a: 0,
         b: 0

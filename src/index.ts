@@ -3,11 +3,32 @@ import { now } from './now'
 const isPromise = (o: any): boolean => !!o && typeof o.then === 'function'
 const noop = (): void => void(0)
 
-interface TaskEntity {
+interface ITask {
+  /**
+   * The function to execute each time the task is invoked. The function will
+   * be called at each interval and passed the `args` argument if specified,
+   * and the current invocation count if not.
+   */
   fn: (...args: any[]) => any;
+
+  /**
+   * An array of arguments to be spread passed to the function specified by `fn`.
+   */
   args: any[];
+
+  /**
+   * The scope (`this` reference) in which to execute the `fn` function.
+   * Defaults to the task config object.
+   */
   ctx: any | null;
-  interval?: number; // 0, identify as once-run task
+
+  /**
+   * The frequency in milliseconds with which the task should be invoked.
+   * (0, identify as a one-time task)
+   */
+  interval?: number;
+
+  /* task internal properties */
   ts?: number;
   next?: (() => void) | null;
   defer?: Promise<any> | null;
@@ -20,11 +41,17 @@ type TaskRunnerOptions = {
   startOnAdd: boolean;
 }
 
-export enum RunnerState {
-  READY, IDLE, STOP, STOPED, RUNNING
-}
+export type TaskConfig = Partial<Pick<ITask, 'args' | 'ctx' | 'interval'>>
 
-export type RunnerCallbackOptions = Partial<Omit<TaskEntity, 'fn'>>
+export type TaskDisposeFunc = () => void
+
+export enum RunnerState {
+  READY,
+  IDLE,
+  STOP,
+  STOPED,
+  RUNNING
+}
 
 export class TaskRunner {
   constructor (opts: Partial<TaskRunnerOptions> | TaskRunnerOnInit) {
@@ -43,20 +70,20 @@ export class TaskRunner {
     startOnAdd: false
   };
 
-  private _tasks: TaskEntity[] = [];
+  private _tasks: ITask[] = [];
   private _tm: any = null;
   private _state: RunnerState = RunnerState.READY;
 
   /**
    * Enqueue task to the runner queue, bootstrap runner if construct option `startOnAdd` is true
    *
-   * @param task {Function} Add task function
-   * @param options {Number|RunnerCallbackOptions} task options, as interval if a number
+   * @param task {Function} The function to execute each time the task is invoked
+   * @param options {Number|TaskConfig} task options, as interval if a number
    *
    * @return Returns a teardown function for dispose the added task manually
    */
-  add (fn: (...args: any[]) => any, options: number | RunnerCallbackOptions): () => void {
-    let conf: RunnerCallbackOptions
+  add (fn: (...args: any[]) => any, options: number | TaskConfig): TaskDisposeFunc {
+    let conf: TaskConfig
     if (typeof options === 'number') {
       conf = {
         interval: options
@@ -113,7 +140,7 @@ export class TaskRunner {
 
     const isStoped = (): boolean => this._state === RunnerState.STOPED
 
-    const evaluate = (task: TaskEntity): void => {
+    const evaluate = (task: ITask): void => {
       const {
         fn,
         ctx,
@@ -145,7 +172,7 @@ export class TaskRunner {
           tasks.splice(index, 1)
         }
 
-        const r = fn.apply(ctx, args || [])
+        const r = fn.apply(ctx || task, args || [])
         if (isPromise(r)) {
           task.defer = r
             .then(r => {
@@ -166,7 +193,7 @@ export class TaskRunner {
     const process = (): void => {
       this._state = RunnerState.RUNNING
       const arr = this._tasks.slice(0)
-      let task: TaskEntity | null
+      let task: ITask | null
       let index = -1
       while (task = arr[++index]) evaluate(task)
     }
