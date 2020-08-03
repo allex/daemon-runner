@@ -1,13 +1,13 @@
 import 'setimmediate'
 import { now } from './now'
 
-declare function setInterval(handler: TimerHandler, timeout?: number, ...arguments: any[]): number;
-declare function setImmediate(callback: (...args: any[]) => void, ...args: any[]): number;
-
 const isPromise = (o: any): boolean => !!o && typeof o.then === 'function'
 const noop = (): void => void(0)
 
-interface ITask {
+type Timeout = NodeJS.Timeout | number
+type Immediate = NodeJS.Immediate | number
+
+export interface TaskConfig {
   /**
    * The function to execute each time the task is invoked. The function will
    * be called at each interval and passed the `args` argument if specified,
@@ -31,7 +31,9 @@ interface ITask {
    * (0, identify as a one-time task)
    */
   interval?: number;
+}
 
+interface ITask extends TaskConfig {
   /* task internal properties */
   ts?: number;
   next?: (() => void) | null;
@@ -40,12 +42,10 @@ interface ITask {
 
 type TaskRunnerOnInit = (o: TaskRunner) => void
 
-type TaskRunnerOptions = {
+export type TaskRunnerOptions = {
   onInit: TaskRunnerOnInit;
   startOnAdd: boolean;
 }
-
-export type TaskConfig = Partial<Pick<ITask, 'args' | 'ctx' | 'interval'>>
 
 export type TaskDisposeFunc = () => void
 
@@ -74,8 +74,8 @@ export class TaskRunner {
   };
 
   private _tasks: ITask[] = [];
-  private _tm: number = 0;
-  private _pid: number = 0;
+  private _tm: Timeout = 0;
+  private _pid: Immediate = 0;
   private _state: RunnerState = RunnerState.READY;
 
   /**
@@ -86,8 +86,8 @@ export class TaskRunner {
    *
    * @return Returns a teardown function for dispose the added task manually
    */
-  add (fn: (...args: any[]) => any, options: number | TaskConfig): TaskDisposeFunc {
-    let conf: TaskConfig
+  add (fn: (...args: any[]) => any, options: number | Partial<TaskConfig>): TaskDisposeFunc {
+    let conf: Partial<TaskConfig>
     if (typeof options === 'number') {
       conf = {
         interval: options
@@ -96,7 +96,7 @@ export class TaskRunner {
       conf = options
     }
 
-    let task
+    let task: ITask
     const tasks = this._tasks
 
     // add duplicate check
@@ -185,10 +185,10 @@ export class TaskRunner {
     }
 
     const process = (): void => {
-      // add process locker
-      if (this._pid > 0) {
+      if (this._pid) {
         return
       }
+      // add process locker
       this._pid = setImmediate(() => {
         const arr = this._tasks.slice(0)
         let task: ITask | null
@@ -200,7 +200,7 @@ export class TaskRunner {
 
     const clear = (): void => {
       if (this._tm) {
-        clearInterval(this._tm)
+        clearInterval(this._tm as any)
         this._tm = 0
       }
     }
