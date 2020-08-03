@@ -19,7 +19,9 @@
     "prepare": "yarn build"
   },
   "author": "Allex Wang <allex.wxn@gmail.com>",
-  "dependencies": {},
+  "dependencies": {
+    "setimmediate": "^1.0.5"
+  },
   "devDependencies": {
     "@babel/core": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
